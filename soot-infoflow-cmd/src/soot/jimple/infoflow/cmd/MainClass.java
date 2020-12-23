@@ -741,7 +741,7 @@ public class MainClass {
 		{
 			String sourcesSinks = cmd.getOptionValue(OPTION_SOURCES_SINKS_FILE);
 			if (sourcesSinks != null && !sourcesSinks.isEmpty())
-				config.getAnalysisFileConfig().setSourceSinkFile(sourcesSinks);
+				config.getAnalysisFileConfig().setSourceSinkFile(sourcesSinks);	//@cs setSourceSinkFile
 		}
 		{
 			String outputFile = cmd.getOptionValue(OPTION_OUTPUT_FILE);

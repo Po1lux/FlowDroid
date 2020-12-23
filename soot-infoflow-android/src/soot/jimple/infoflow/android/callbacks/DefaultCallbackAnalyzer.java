@@ -211,6 +211,7 @@ public class DefaultCallbackAnalyzer extends AbstractCallbackAnalyzer implements
 	 *                component that the given class corresponds to
 	 * @return The set of implemented lifecycle methods in the given class
 	 */
+	// @ccs-------寻找已经实现的生命周期函数
 	private static Collection<? extends MethodOrMethodContext> getLifecycleMethods(SootClass sc, List<String> methods) {
 		Set<MethodOrMethodContext> lifecycleMethods = new HashSet<>();
 		SootClass currentClass = sc;

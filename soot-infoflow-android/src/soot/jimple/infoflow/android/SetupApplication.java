@@ -427,7 +427,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		// lifecycle methods for this purpose.
 		this.manifest = createManifestParser(targetAPK);
 		SystemClassHandler.v().setExcludeSystemComponents(config.getIgnoreFlowsInSystemPackages());
-		Set<String> entryPoints = manifest.getEntryPointClasses();
+		Set<String> entryPoints = manifest.getEntryPointClasses();	//@cs_根据Manifest检索4个组件，获取每个类的类名，最后一项为app名
 		this.entrypoints = new HashSet<>(entryPoints.size());
 		for (String className : entryPoints) {
 			SootClass sc = Scene.v().getSootClassUnsafe(className);
@@ -514,6 +514,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 					calculateCallbackMethodsFast(lfp, entryPoint);
 					break;
 				case Default:
+					//in @ccs---------soot跑完
 					calculateCallbackMethods(lfp, entryPoint);
 					break;
 				default:
@@ -661,6 +662,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		PackManager.v().getPack("wjtp").remove("wjtp.ajc");
 
 		// Get the classes for which to find callbacks
+		// @ccs--------入口类，每个组件均有一个入口类
 		Set<SootClass> entryPointClasses = getComponentsToAnalyze(component);
 
 		// Collect the callback interfaces implemented in the app's
@@ -705,6 +707,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Create the new iteration of the main method
+				// @ccs------------------生成DummyMainMethod
 				createMainMethod(component);
 
 				int numPrevEdges = 0;
@@ -729,11 +732,12 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 				isInitial = false;
 
-				// Run the soot-based operations
+				// Run the soot-based operations	//@ccs-------创建callgraph
 				constructCallgraphInternal();
 				if (!Scene.v().hasCallGraph())
 					throw new RuntimeException("No callgraph in Scene even after creating one. That's very sad "
 							+ "and should never happen.");
+				//@ccs---------开始回调函数的分析
 				PackManager.v().getPack("wjtp").apply();
 
 				// Creating all callgraph takes time and memory. Check whether
@@ -1444,6 +1448,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		// Start a new Soot instance
 		if (config.getSootIntegrationMode() == SootIntegrationMode.CreateNewInstance) {
 			G.reset();
+			//@ccs------------初始化Soot
 			initializeSoot();
 		}
 
@@ -1454,7 +1459,6 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			logger.error("Parse app resource failed", e);
 			throw new RuntimeException("Parse app resource failed", e);
 		}
-
 		MultiRunResultAggregator resultAggregator = new MultiRunResultAggregator();
 
 		// We need at least one entry point
@@ -1465,13 +1469,14 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 
 		// In one-component-at-a-time, we do not have a single entry point
 		// creator. For every entry point, run the data flow analysis.
+
 		if (config.getOneComponentAtATime()) {
 			List<SootClass> entrypointWorklist = new ArrayList<>(entrypoints);
 			while (!entrypointWorklist.isEmpty()) {
 				SootClass entrypoint = entrypointWorklist.remove(0);
 				processEntryPoint(sourcesAndSinks, resultAggregator, entrypointWorklist.size(), entrypoint);
 			}
-		} else
+		} else	//in
 			processEntryPoint(sourcesAndSinks, resultAggregator, -1, null);
 
 		// Write the results to disk if requested
@@ -1505,13 +1510,14 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		try {
 			if (config.getOneComponentAtATime())
 				calculateCallbacks(sourcesAndSinks, entrypoint);
-			else
+			else//@ccs------in
 				calculateCallbacks(sourcesAndSinks);
 		} catch (IOException | XmlPullParserException e) {
 			logger.error("Callgraph construction failed: " + e.getMessage(), e);
 			throw new RuntimeException("Callgraph construction failed", e);
 		}
 		callbackDuration = Math.round((System.nanoTime() - callbackDuration) / 1E9);
+		//@ccs--------------完成回调函数和调用图建立？
 		logger.info(
 				String.format("Collecting callbacks and building a callgraph took %d seconds", (int) callbackDuration));
 
@@ -1522,7 +1528,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			logger.info("Running data flow analysis on {} (component {}/{}: {}) with {} sources and {} sinks...",
 					apkFileLocation, (entrypoints.size() - numEntryPoints), entrypoints.size(), entrypoint,
 					sources == null ? 0 : sources.size(), sinks == null ? 0 : sinks.size());
-		else
+		else//in
 			logger.info("Running data flow analysis on {} with {} sources and {} sinks...", apkFileLocation,
 					sources == null ? 0 : sources.size(), sinks == null ? 0 : sinks.size());
 
@@ -1537,7 +1543,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		// Create and run the data flow tracker
 		infoflow = createInfoflow();
 		infoflow.addResultsAvailableHandler(resultAggregator);
-		infoflow.runAnalysis(sourceSinkManager, entryPointCreator.getGeneratedMainMethod());
+		infoflow.runAnalysis(sourceSinkManager, entryPointCreator.getGeneratedMainMethod());	//开始污点分析
 
 		// Update the statistics
 		if (config.getLogSourcesAndSinks() && infoflow.getCollectedSources() != null)

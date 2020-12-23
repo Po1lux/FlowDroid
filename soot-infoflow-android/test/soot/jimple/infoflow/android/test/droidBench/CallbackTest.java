@@ -30,7 +30,7 @@ public class CallbackTest extends JUnitTests {
 		Assert.assertNotNull(res);
 		Assert.assertEquals(1, res.size()); // loc + lat, but single parameter
 	}
-
+/*
 	@Test(timeout = 300000)
 	public void runTestButton1() throws IOException, XmlPullParserException {
 		InfoflowResults res = analyzeAPKFile("Callbacks/Button1.apk");
@@ -138,5 +138,5 @@ public class CallbackTest extends JUnitTests {
 		Assert.assertNotNull(res);
 		Assert.assertEquals(0, res.size());
 	}
-
+*/
 }

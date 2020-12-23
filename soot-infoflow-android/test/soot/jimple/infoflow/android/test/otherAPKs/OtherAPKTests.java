@@ -9,7 +9,18 @@ import org.xmlpull.v1.XmlPullParserException;
 import soot.jimple.infoflow.results.InfoflowResults;
 
 public class OtherAPKTests extends JUnitTests {
-	
+
+	@Test
+	//@ccs----------test
+	public void runTest1() throws IOException, XmlPullParserException {
+		InfoflowResults res = analyzeAPKFile
+				("testAPKs/enriched1.apk", false, false, false);
+		Assert.assertNotNull(res);
+		Assert.assertTrue(res.size() > 0);
+	}
+
+
+	/*
 	@Test
 	public void runTest1() throws IOException, XmlPullParserException {
 		InfoflowResults res = analyzeAPKFile
@@ -17,6 +28,7 @@ public class OtherAPKTests extends JUnitTests {
 		Assert.assertNotNull(res);
 		Assert.assertTrue(res.size() > 0);
 	}
+
 
 	@Test
 	public void runTest2() throws IOException, XmlPullParserException {
@@ -32,5 +44,6 @@ public class OtherAPKTests extends JUnitTests {
 				("testAPKs/ReturnParameterTest.apk", false, false, false);
 		Assert.assertTrue(res == null || res.isEmpty());
 	}
+	 */
 
 }
