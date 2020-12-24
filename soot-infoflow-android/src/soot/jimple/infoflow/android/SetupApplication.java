@@ -677,6 +677,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		jimpleClass.addCallbackFilter(new AlienHostComponentFilter(entrypoints));
 		jimpleClass.addCallbackFilter(new ApplicationCallbackFilter(entrypoints));
 		jimpleClass.addCallbackFilter(new UnreachableConstructorFilter());
+		// @ccs------获取组件类中的生命周期回调方法
 		jimpleClass.collectCallbackMethods();
 
 		// Find the user-defined sources in the layout XML files. This
@@ -707,7 +708,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Create the new iteration of the main method
-				// @ccs------------------生成DummyMainMethod
+				// @ccs------生成DummyMainMethod
 				createMainMethod(component);
 
 				int numPrevEdges = 0;
