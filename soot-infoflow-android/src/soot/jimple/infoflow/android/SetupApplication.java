@@ -102,6 +102,7 @@ import soot.jimple.infoflow.taintWrappers.ITaintPropagationWrapper;
 import soot.jimple.infoflow.taintWrappers.ITaintWrapperDataFlowAnalysis;
 import soot.jimple.infoflow.util.SystemClassHandler;
 import soot.jimple.infoflow.values.IValueProvider;
+import soot.jimple.internal.JIfStmt;
 import soot.options.Options;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
@@ -708,7 +709,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Create the new iteration of the main method
-				// @ccs------生成DummyMainMethod
+				// @ccs------创建dummyMainMethod
 				createMainMethod(component);
 
 				int numPrevEdges = 0;
@@ -733,7 +734,8 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 				isInitial = false;
 
-				// Run the soot-based operations	//@ccs-------创建callgraph
+				// Run the soot-based operations
+				// @ccs-------创建callGraph
 				constructCallgraphInternal();
 				if (!Scene.v().hasCallGraph())
 					throw new RuntimeException("No callgraph in Scene even after creating one. That's very sad "
@@ -1112,6 +1114,11 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		// of callback methods
 		entryPointCreator = createEntryPointCreator(component);
 		SootMethod dummyMainMethod = entryPointCreator.createDummyMain();
+		// @ccs---------添加打印dummyMainMethod的jimple
+		for(Unit u :dummyMainMethod.retrieveActiveBody().getUnits()){
+			System.out.println(u.toString());
+		}
+		// -------------------------------
 		Scene.v().setEntryPoints(Collections.singletonList(dummyMainMethod));
 		if (!dummyMainMethod.getDeclaringClass().isInScene())
 			Scene.v().addClass(dummyMainMethod.getDeclaringClass());
