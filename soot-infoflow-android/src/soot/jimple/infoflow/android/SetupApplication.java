@@ -735,12 +735,12 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				isInitial = false;
 
 				// Run the soot-based operations
-				// @ccs-------创建callGraph
+				// @ccs---------------------创建callGraph
 				constructCallgraphInternal();
 				if (!Scene.v().hasCallGraph())
 					throw new RuntimeException("No callgraph in Scene even after creating one. That's very sad "
 							+ "and should never happen.");
-				//@ccs---------开始回调函数的分析
+				//@ccs----------------------开始回调函数的分析
 				PackManager.v().getPack("wjtp").apply();
 
 				// Creating all callgraph takes time and memory. Check whether
@@ -758,7 +758,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				// Collect the results of the soot-based phases
 				if (this.callbackMethods.putAll(jimpleClass.getCallbackMethods()))
 					hasChanged = true;
-
+					// entrypoints 就是组件类的SootClass类型对象
 				if (entrypoints.addAll(jimpleClass.getDynamicManifestComponents()))
 					hasChanged = true;
 
@@ -782,6 +782,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Check depth limiting
+				// 这里在一层一层分析
 				depthIdx++;
 				if (callbackConfig.getMaxAnalysisCallbackDepth() > 0
 						&& depthIdx >= callbackConfig.getMaxAnalysisCallbackDepth())
