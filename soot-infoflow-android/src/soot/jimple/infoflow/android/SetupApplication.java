@@ -713,7 +713,9 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				createMainMethod(component);
 
 				int numPrevEdges = 0;
+				// 第一次循环应该没有CG
 				if (Scene.v().hasCallGraph()) {
+					// 得到上次迭代计算出来的边？
 					numPrevEdges = Scene.v().getCallGraph().size();
 				}
 				// Since the generation of the main method can take some time,
@@ -728,14 +730,13 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				if (!isInitial) {
 					// Reset the callgraph
 					releaseCallgraph();
-
 					// We only want to parse the layout files once
 					PackManager.v().getPack("wjtp").remove("wjtp.lfp");
 				}
 				isInitial = false;
 
 				// Run the soot-based operations
-				// @ccs---------------------创建callGraph
+				// @ccs---------------------使用soot创建callGraph，耗时最长
 				constructCallgraphInternal();
 				if (!Scene.v().hasCallGraph())
 					throw new RuntimeException("No callgraph in Scene even after creating one. That's very sad "
@@ -752,13 +753,14 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 					}
 				}
 
+				// 上次CG中的边和这次CG图中的边是否一致，即判断是否是新一轮的迭代
 				if (numPrevEdges < Scene.v().getCallGraph().size())
 					hasChanged = true;
 
 				// Collect the results of the soot-based phases
 				if (this.callbackMethods.putAll(jimpleClass.getCallbackMethods()))
 					hasChanged = true;
-					// entrypoints 就是组件类的SootClass类型对象
+				// entrypoints 就是组件类的SootClass类型对象
 				if (entrypoints.addAll(jimpleClass.getDynamicManifestComponents()))
 					hasChanged = true;
 
@@ -769,6 +771,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				// Avoid callback overruns. If we are beyond the callback limit
 				// for one entry point, we may not collect any further callbacks
 				// for that entry point.
+				// 默认删除大于100个callback的组件分析
 				if (callbackConfig.getMaxCallbacksPerComponent() > 0) {
 					for (Iterator<SootClass> componentIt = this.callbackMethods.keySet().iterator(); componentIt
 							.hasNext();) {
@@ -782,7 +785,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Check depth limiting
-				// 这里在一层一层分析
+				// 这里在一层一层分析，默认最大分析深度getMaxAnalysisCallbackDepth=-1
 				depthIdx++;
 				if (callbackConfig.getMaxAnalysisCallbackDepth() > 0
 						&& depthIdx >= callbackConfig.getMaxAnalysisCallbackDepth())
