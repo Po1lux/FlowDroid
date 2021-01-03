@@ -73,6 +73,7 @@ public class DefaultCallbackAnalyzer extends AbstractCallbackAnalyzer implements
 	public void collectCallbackMethods() {
 		super.collectCallbackMethods();
 
+		// @ccs-----------------------------------wjtp.ajc
 		Transform transform = new Transform("wjtp.ajc", new SceneTransformer() {
 			@Override
 			protected void internalTransform(String phaseName, @SuppressWarnings("rawtypes") Map options) {

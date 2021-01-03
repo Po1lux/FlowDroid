@@ -103,6 +103,7 @@ import soot.jimple.infoflow.taintWrappers.ITaintWrapperDataFlowAnalysis;
 import soot.jimple.infoflow.util.SystemClassHandler;
 import soot.jimple.infoflow.values.IValueProvider;
 import soot.jimple.internal.JIfStmt;
+import soot.jimple.toolkits.callgraph.CallGraph;
 import soot.options.Options;
 import soot.util.HashMultiMap;
 import soot.util.MultiMap;
@@ -605,6 +606,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			handler.onBeforeCallgraphConstruction();
 
 		// Make sure that we don't have any weird leftovers
+		// 删除其他一些“剩饭剩菜o. o”
 		releaseCallgraph();
 
 		// If we didn't create the Soot instance, we can't be sure what its callgraph
@@ -615,6 +617,11 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		// Construct the actual callgraph
 		logger.info("Constructing the callgraph...");
 		PackManager.v().getPack("cg").apply();
+		// @ccs add----------------------------------------------------打印CG的调用边
+		int a = Scene.v().getCallGraph().size();// 760 1982
+		CallGraph cga = Scene.v().getCallGraph();
+		System.out.println(cga);
+		// @ccs end----------------------------------------------------
 
 		// ICC instrumentation
 		if (iccInstrumenter != null)
@@ -736,13 +743,16 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				isInitial = false;
 
 				// Run the soot-based operations
-				// @ccs---------------------使用soot创建callGraph，耗时最长
+				// @ccs 使用soot创建CG，耗时最长------------------------------------------------------
+				// CG保存在Scene.v()中，通过Scene.v().getCallGraph()获得
 				constructCallgraphInternal();
+				int a = Scene.v().getCallGraph().size();
 				if (!Scene.v().hasCallGraph())
 					throw new RuntimeException("No callgraph in Scene even after creating one. That's very sad "
 							+ "and should never happen.");
 				//@ccs----------------------开始回调函数的分析
 				PackManager.v().getPack("wjtp").apply();
+				a = Scene.v().getCallGraph().size();
 
 				// Creating all callgraph takes time and memory. Check whether
 				// the solver has been aborted in the meantime
@@ -754,6 +764,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// 上次CG中的边和这次CG图中的边是否一致，即判断是否是新一轮的迭代
+				// numPrevEdges保存的是上次分析得到的CG图的边数
 				if (numPrevEdges < Scene.v().getCallGraph().size())
 					hasChanged = true;
 
@@ -785,8 +796,10 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Check depth limiting
-				// 这里在一层一层分析，默认最大分析深度getMaxAnalysisCallbackDepth=-1
+				// 这里在一层一层分析
 				depthIdx++;
+				// 如果分析深度超过最大设定深度，结束循环
+				// 默认最大分析深度getMaxAnalysisCallbackDepth=-1
 				if (callbackConfig.getMaxAnalysisCallbackDepth() > 0
 						&& depthIdx >= callbackConfig.getMaxAnalysisCallbackDepth())
 					break;
@@ -796,6 +809,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				// rounds
 				if (config.getSootIntegrationMode() == SootIntegrationMode.UseExistingCallgraph)
 					break;
+				a = Scene.v().getCallGraph().size();
 			}
 		} catch (Exception ex) {
 			logger.error("Could not calculate callback methods", ex);
