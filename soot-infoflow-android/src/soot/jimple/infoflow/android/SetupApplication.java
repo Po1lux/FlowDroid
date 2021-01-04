@@ -523,7 +523,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 					throw new RuntimeException("Unknown callback analyzer");
 				}
 			}
-		} else if (config.getSootIntegrationMode().needsToBuildCallgraph()) {
+		} else if (config.getSootIntegrationMode().needsToBuildCallgraph()) {	//not in
 			// Create the new iteration of the main method
 			createMainMethod(entryPoint);
 			constructCallgraphInternal();
@@ -531,6 +531,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 
 		logger.info("Entry point calculation done.");
 		createSourceSinkProvider(entryPoint, lfp);
+		// @ccs log:Created a SourceSinkManager with 68 sources, 194 sinks, and 19 callback methods.
 	}
 
 	/**
@@ -618,9 +619,9 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		logger.info("Constructing the callgraph...");
 		PackManager.v().getPack("cg").apply();
 		// @ccs add----------------------------------------------------打印CG的调用边
-		int a = Scene.v().getCallGraph().size();// 760 1982
-		CallGraph cga = Scene.v().getCallGraph();
-		System.out.println(cga);
+//		int a = Scene.v().getCallGraph().size();// 760 1982
+//		CallGraph cga = Scene.v().getCallGraph();
+//		System.out.println(cga);
 		// @ccs end----------------------------------------------------
 
 		// ICC instrumentation
@@ -716,7 +717,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				}
 
 				// Create the new iteration of the main method
-				// @ccs------创建dummyMainMethod
+				// @ccs add-----------------------------------创建dummyMainMethod
 				createMainMethod(component);
 
 				int numPrevEdges = 0;
@@ -743,8 +744,8 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 				isInitial = false;
 
 				// Run the soot-based operations
-				// @ccs 使用soot创建CG，耗时最长------------------------------------------------------
-				// CG保存在Scene.v()中，通过Scene.v().getCallGraph()获得
+				// @ccs ----------------------------------------------创建CG，耗时最长
+				// 通过Scene.v().getCallGraph()获得CallGraph
 				constructCallgraphInternal();
 				int a = Scene.v().getCallGraph().size();
 				if (!Scene.v().hasCallGraph())
@@ -752,7 +753,6 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 							+ "and should never happen.");
 				//@ccs----------------------开始回调函数的分析
 				PackManager.v().getPack("wjtp").apply();
-				a = Scene.v().getCallGraph().size();
 
 				// Creating all callgraph takes time and memory. Check whether
 				// the solver has been aborted in the meantime
@@ -848,6 +848,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		}
 
 		// Make sure that we don't retain any weird Soot phases
+		// @ccs -----------------------------------------这两个phase是flowdroid自定义的？
 		PackManager.v().getPack("wjtp").remove("wjtp.lfp");
 		PackManager.v().getPack("wjtp").remove("wjtp.ajc");
 
@@ -863,7 +864,7 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 			logger.info("Callback analysis terminated normally");
 
 		// Serialize the callbacks
-		if (callbackConfig.isSerializeCallbacks()) {
+		if (callbackConfig.isSerializeCallbacks()) {	// not in
 			CollectedCallbacks callbacks = new CollectedCallbacks(entryPointClasses, callbackMethods, fragmentClasses);
 			CollectedCallbacksSerializer.serialize(callbacks, callbackConfig);
 		}
@@ -1132,11 +1133,11 @@ public class SetupApplication implements ITaintWrapperDataFlowAnalysis {
 		// of callback methods
 		entryPointCreator = createEntryPointCreator(component);
 		SootMethod dummyMainMethod = entryPointCreator.createDummyMain();
-		// @ccs---------添加打印dummyMainMethod的jimple
-		for(Unit u :dummyMainMethod.retrieveActiveBody().getUnits()){
-			System.out.println(u.toString());
-		}
-		// -------------------------------
+		// @ccs add-----------------------------输出dummyMainMethod
+//		for(Unit u :dummyMainMethod.retrieveActiveBody().getUnits()){
+//			System.out.println(u.toString());
+//		}
+		// @ccs end-------------------------------
 		Scene.v().setEntryPoints(Collections.singletonList(dummyMainMethod));
 		if (!dummyMainMethod.getDeclaringClass().isInScene())
 			Scene.v().addClass(dummyMainMethod.getDeclaringClass());

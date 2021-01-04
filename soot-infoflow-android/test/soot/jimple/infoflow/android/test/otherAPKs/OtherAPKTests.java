@@ -15,7 +15,7 @@ public class OtherAPKTests extends JUnitTests {
 	//@ccs----------test
 	public void runTest1() throws IOException, XmlPullParserException {
 		InfoflowResults res = analyzeAPKFile
-				("testAPKs/9458cfb51c90130938abcef7173c3f6d44a02720.apk", false, false, false);
+				("testAPKs/wx7011.apk", false, false, false);
 		Assert.assertNotNull(res);
 		Assert.assertTrue(res.size() > 0);
 	}

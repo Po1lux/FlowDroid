@@ -250,7 +250,6 @@ public class Infoflow extends AbstractInfoflow {
 
 	/**
 	 * Conducts a taint analysis on an already initialized callgraph
-	 * @cs 在已初始化的调用图中进行问题求解（污点分析）
 	 * @param sourcesSinks    The sources and sinks to be used
 	 * @param additionalSeeds Additional seeds at which to create A ZERO fact even
 	 *                        if they are not sources
@@ -289,6 +288,7 @@ public class Infoflow extends AbstractInfoflow {
 				sourcesSinks.initialize();
 
 			// Perform constant propagation and remove dead code
+			// @ccs----------------------------------------------静态变量传播、清除死代码
 			if (config.getCodeEliminationMode() != CodeEliminationMode.NoCodeElimination) {
 				long currentMillis = System.nanoTime();
 				eliminateDeadCode(sourcesSinks);
@@ -297,6 +297,7 @@ public class Infoflow extends AbstractInfoflow {
 
 			// After constant value propagation, we might find more call edges
 			// for reflective method calls
+			// @ccs-----------------------------------------------反射方法
 			if (config.getEnableReflection()) {
 				releaseCallgraph();
 				constructCallgraph();
@@ -313,10 +314,12 @@ public class Infoflow extends AbstractInfoflow {
 				pathBuilderFactory = new DefaultPathBuilderFactory(config.getPathConfiguration());
 
 			logger.info("Starting Taint Analysis");
+			// @ccs------------------------------------------------初始化ICFG（CG+CFG）过程间控制流图
 			IInfoflowCFG iCfg = icfgFactory.buildBiDirICFG(config.getCallgraphAlgorithm(),
 					config.getEnableExceptionTracking());
 
 			// Check whether we need to run with one source at a time
+			// @ccs--------------------------------------------------单source分析
 			IOneSourceAtATimeManager oneSourceAtATime = config.getOneSourceAtATime() && sourcesSinks != null
 					&& sourcesSinks instanceof IOneSourceAtATimeManager ? (IOneSourceAtATimeManager) sourcesSinks
 							: null;
@@ -369,6 +372,7 @@ public class Infoflow extends AbstractInfoflow {
 				}
 
 				// Initialize the aliasing infrastructure
+				// @ccs------------------------------------别名分析
 				Aliasing aliasing = createAliasController(aliasingStrategy);
 				if (dummyMainMethod != null)
 					aliasing.excludeMethodFromMustAlias(dummyMainMethod);
@@ -494,7 +498,7 @@ public class Infoflow extends AbstractInfoflow {
 						performanceData.setTaintPropagationSeconds(0);
 					long beforeTaintPropagation = System.nanoTime();
 
-					onBeforeTaintPropagation(forwardSolver, backwardSolver);
+					onBeforeTaintPropagation(forwardSolver, backwardSolver);	//空方法
 					forwardSolver.solve();
 
 					// Not really nice, but sometimes Heros returns before all
